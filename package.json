@@ -13,7 +13,7 @@
     "initLatest": "npm run initSubModules && sh ./scripts/switchToBranch.sh latest",
     "initMarketing": "git checkout marketing && npm run updateCoreDependencies && npm run buildCore",
     "initMaster": "npm run initSubModules && sh ./scripts/switchToBranch.sh master",
-    "initMaster": "npm run initSubModules && sh ./scripts/switchToBranch.sh charting",
+    "initCharting": "npm run initSubModules && sh ./scripts/switchToBranch.sh charting",
     "updateExamples": "sh ./scripts/updateSubModules.sh",
     "updateDependencies": "lerna bootstrap",
     "updateCoreDependencies": "lerna bootstrap --scope ag-grid-community --scope ag-grid-enterprise --scope ag-grid-angular --scope ag-grid-react --scope ag-grid-vue --scope ag-grid-aurelia --scope ag-grid-docs",

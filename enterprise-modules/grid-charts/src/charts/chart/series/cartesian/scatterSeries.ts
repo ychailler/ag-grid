@@ -1,16 +1,19 @@
-import { CartesianChart } from "../cartesianChart";
-import { Selection } from "../../scene/selection";
-import { Group } from "../../scene/group";
-import { Series, SeriesNodeDatum, CartesianTooltipRendererParams } from "./series";
-import { numericExtent } from "../../util/array";
-import { toFixed } from "../../util/number";
-import { LegendDatum } from "../legend";
-import { Shape } from "../../scene/shape/shape";
-import linearScale from "../../scale/linearScale";
-import { Marker } from "../marker/marker";
-import { SeriesMarker } from "./seriesMarker";
-import { Circle } from "../marker/circle";
-import { reactive } from "../../util/observable";
+import { CartesianChart } from "../../cartesianChart";
+import { Selection } from "../../../scene/selection";
+import { Group } from "../../../scene/group";
+import { Series, SeriesNodeDatum, CartesianTooltipRendererParams } from "../series";
+import { numericExtent } from "../../../util/array";
+import { toFixed } from "../../../util/number";
+import { LegendDatum } from "../../legend";
+import { Shape } from "../../../scene/shape/shape";
+import linearScale from "../../../scale/linearScale";
+import { Marker } from "../../marker/marker";
+import { SeriesMarker } from "../seriesMarker";
+import { Circle } from "../../marker/circle";
+import { reactive } from "../../../util/observable";
+import { Axis } from "../../../axis";
+import Scale from "../../../scale/scale";
+import { CartesianSeries } from "./cartesianSeries";
 
 interface GroupSelectionDatum extends SeriesNodeDatum {
     x: number;
@@ -29,7 +32,7 @@ export interface ScatterTooltipRendererParams extends CartesianTooltipRendererPa
     labelName?: string;
 }
 
-export class ScatterSeries extends Series<CartesianChart> {
+export class ScatterSeries extends CartesianSeries {
 
     static className = 'ScatterSeries';
 
@@ -53,11 +56,11 @@ export class ScatterSeries extends Series<CartesianChart> {
         fill: 'yellow'
     };
 
-    @reactive(['layout']) title?: string;
-    @reactive(['data']) xKey: string = '';
-    @reactive(['data']) yKey: string = '';
-    @reactive(['data']) sizeKey?: string;
-    @reactive(['data']) labelKey?: string;
+    @reactive(['layoutChange']) title?: string;
+    @reactive(['dataChange']) xKey: string = '';
+    @reactive(['dataChange']) yKey: string = '';
+    @reactive(['dataChange']) sizeKey?: string;
+    @reactive(['dataChange']) labelKey?: string;
 
     xName: string = 'X';
     yName: string = 'Y';
@@ -69,16 +72,17 @@ export class ScatterSeries extends Series<CartesianChart> {
     constructor() {
         super();
 
-        this.marker.addPropertyListener('type', this.onMarkerTypeChange.bind(this));
-        this.marker.addEventListener('style', this.update.bind(this));
-        this.marker.addEventListener('legend', () => this.chart && this.chart.updateLegend());
+        const { marker } = this;
+        marker.addPropertyListener('type', this.onMarkerTypeChange.bind(this));
+        marker.addEventListener('change', this.update.bind(this));
+        marker.addEventListener('legendChange', event => this.fireEvent(event));
 
-        this.addPropertyListener('xKey', event => event.source.xData = []);
-        this.addPropertyListener('yKey', event => event.source.yData = []);
-        this.addPropertyListener('sizeKey', event => event.source.sizeData = []);
+        this.addPropertyListener('xKey', () => this.xData = []);
+        this.addPropertyListener('yKey', () => this.yData = []);
+        this.addPropertyListener('sizeKey', () => this.sizeData = []);
 
-        this.addEventListener('layout', () => this.scheduleLayout.bind(this));
-        this.addEventListener('data', () => this.scheduleData.bind(this));
+        this.addEventListener('layoutChange', () => this.scheduleLayout.bind(this));
+        this.addEventListener('dataChange', () => this.scheduleData.bind(this));
     }
 
     onMarkerTypeChange() {
@@ -89,15 +93,10 @@ export class ScatterSeries extends Series<CartesianChart> {
 
     processData(): boolean {
         const {
-            chart,
             xKey,
             yKey,
             sizeKey
         } = this;
-
-        if (!(chart && chart.xAxis && chart.yAxis)) {
-            return false;
-        }
 
         const data = xKey && yKey ? this.data : [];
 
@@ -106,8 +105,7 @@ export class ScatterSeries extends Series<CartesianChart> {
 
         if (sizeKey) {
             this.sizeData = data.map(d => d[sizeKey]);
-        }
-        else {
+        } else {
             this.sizeData = [];
         }
 
@@ -145,14 +143,13 @@ export class ScatterSeries extends Series<CartesianChart> {
     }
 
     update(): void {
-        const chart = this.chart;
         const visible = this.group.visible = this.visible;
 
-        if (!chart || !visible || chart.dataPending || chart.layoutPending || !(chart.xAxis && chart.yAxis)) {
-            return;
-        }
+        // if (!chart || !visible || chart.dataPending || chart.layoutPending || !(chart.xAxis && chart.yAxis)) {
+        //     return;
+        // }
 
-        const { xAxis, yAxis } = chart;
+        const { xAxis, yAxis } = this;
         const xScale = xAxis.scale;
         const yScale = yAxis.scale;
         const xOffset = (xScale.bandwidth || 0) / 2;

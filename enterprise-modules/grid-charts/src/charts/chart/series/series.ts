@@ -41,7 +41,7 @@ export interface HighlightStyle {
     stroke?: string;
 }
 
-export abstract class Series<C extends Chart> extends Observable {
+export abstract class Series extends Observable {
 
     readonly id: string = this.createId();
 
@@ -52,16 +52,35 @@ export abstract class Series<C extends Chart> extends Observable {
 
     tooltipEnabled: boolean = false;
 
-    @reactive(['data']) data: any[] = [];
-    @reactive(['data']) chart?: C;
-    @reactive(['data']) visible = true;
-    @reactive(['layout']) showInLegend = true;
+    @reactive(['dataChange']) data: any[] = [];
+    // @reactive(['dataChange']) chart?: C;
+    @reactive(['dataChange']) visible = true;
+    @reactive(['layoutChange']) showInLegend = true;
 
-    protected constructor() {
-        super();
+    directions: string[] = [];
 
-        this.addEventListener('layout', () => this.scheduleLayout.bind(this));
-        this.addEventListener('data', () => this.scheduleData.bind(this));
+    directionKeys: { [key in string]: string[] };
+
+    getDirectionKeys(direction: string): string[] {
+        const { directionKeys } = this;
+        const keys = directionKeys && directionKeys[direction];
+        const values: string[] = [];
+
+        if (keys) {
+            keys.forEach(key => {
+                const value = (this as any)[key];
+
+                if (value) {
+                    if (value.length) {
+                        values.push(...value);
+                    } else {
+                        values.push(value);
+                    }
+                }
+            });
+        }
+
+        return values;
     }
 
     private createId(): string {
@@ -98,15 +117,11 @@ export abstract class Series<C extends Chart> extends Observable {
     abstract highlightNode(node: Shape): void;
     abstract dehighlightNode(): void;
 
-    scheduleLayout() {
-        if (this.chart) {
-            this.chart.layoutPending = true;
-        }
+    readonly scheduleLayout = () => {
+        this.fireEvent({type: 'layoutChange'});
     }
 
-    scheduleData() {
-        if (this.chart) {
-            this.chart.dataPending = true;
-        }
+    readonly scheduleData = () => {
+        this.fireEvent({type: 'dataChange'});
     }
 }

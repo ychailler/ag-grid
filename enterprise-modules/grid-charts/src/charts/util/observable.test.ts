@@ -8,7 +8,7 @@ class Component extends Observable {
     subComponent = new SubComponent();
     @reactive(['name', 'misc']) john = 'smith';
     @reactive(['name', 'misc']) bob = 'marley';
-    @reactive(['style'], 'subComponent.foo') foo: string;
+    @reactive(['change'], 'subComponent.foo') foo: string;
 }
 
 class BaseClass extends Observable {
@@ -80,17 +80,35 @@ test('addPropertyListener', () => {
 test('addPropertyListener', () => {
     const c = new Component();
 
-    let triggered = false;
+    let sum = 0;
 
-    c.addPropertyListener('john', () => { triggered = true });
-    c.addPropertyListener('john', () => { triggered = true });
-    c.addPropertyListener('john', () => { triggered = true });
+    const listener1 = () => { sum += 1 };
+    const listener2 = () => { sum += 3 };
+    const listener3 = () => { sum += 5 };
 
-    c.removePropertyListener('john');
+    c.addPropertyListener('john', listener1);
+    c.addPropertyListener('john', listener2);
+    c.addPropertyListener('john', listener3);
+    c.john = 'test1';
+    expect(sum).toBe(9);
+    sum = 0;
+    c.john = 'test1'; // value hasn't changed, no events fired
+    expect(sum).toBe(0);
 
-    c.john = 'test';
+    sum = 0;
+    c.removePropertyListener('john', listener1);
+    c.john = 'test2';
+    expect(sum).toBe(8);
 
-    expect(triggered).toBe(false);
+    sum = 0;
+    c.removePropertyListener('john', listener2);
+    c.john = 'test3';
+    expect(sum).toBe(5);
+
+    sum = 0;
+    c.removePropertyListener('john', listener3);
+    c.john = 'test4';
+    expect(sum).toBe(0);
 });
 
 test('addEventListener', () => {
@@ -114,17 +132,35 @@ test('addEventListener', () => {
 test('removeEventListener', () => {
     const c = new Component();
 
-    let triggered = false;
+    let sum = 0;
 
-    c.addEventListener('name', () => { triggered = true });
-    c.addEventListener('name', () => { triggered = true });
-    c.addEventListener('name', () => { triggered = true });
+    const listener1 = () => { sum += 1 };
+    const listener2 = () => { sum += 3 };
+    const listener3 = () => { sum += 5 };
 
-    c.removeEventListener('name');
+    c.addEventListener('name', listener1);
+    c.addEventListener('name', listener2);
+    c.addEventListener('name', listener3);
+    c.john = 'test1';
+    expect(sum).toBe(9);
+    sum = 0;
+    c.john = 'test1'; // value hasn't changed, no events fired
+    expect(sum).toBe(0);
 
-    c.john = 'test';
+    sum = 0;
+    c.removeEventListener('name', listener1);
+    c.john = 'test2';
+    expect(sum).toBe(8);
 
-    expect(triggered).toBe(false);
+    sum = 0;
+    c.removeEventListener('name', listener2);
+    c.john = 'test3';
+    expect(sum).toBe(5);
+
+    sum = 0;
+    c.removeEventListener('name', listener3);
+    c.john = 'test4';
+    expect(sum).toBe(0);
 });
 
 test('inheritance', () => {

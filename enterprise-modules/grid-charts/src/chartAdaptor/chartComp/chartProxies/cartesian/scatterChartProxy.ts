@@ -1,7 +1,7 @@
 import { ChartType, _, ScatterSeriesOptions, CartesianChartOptions } from "@ag-community/grid-core";
 import { ChartBuilder } from "../../../../charts/chartBuilder";
 import { ChartProxyParams, UpdateChartParams } from "../chartProxy";
-import { ScatterSeries } from "../../../../charts/chart/series/scatterSeries";
+import { ScatterSeries } from "../../../../charts/chart/series/cartesian/scatterSeries";
 import { ChartModel } from "../../chartModel";
 import { CartesianChartProxy } from "./cartesianChartProxy";
 import { SeriesOptions } from "../../../../charts/chartOptions";

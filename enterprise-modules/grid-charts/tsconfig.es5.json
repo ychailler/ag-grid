@@ -5,6 +5,7 @@
     "emitDecoratorMetadata": false,
     "declaration": true,
     "target": "es5",
+    "strictNullChecks": true,
     "noImplicitAny": true,
     "outDir": "dist/cjs",
     "lib": [

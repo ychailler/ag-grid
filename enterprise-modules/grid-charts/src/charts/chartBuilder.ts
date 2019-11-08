@@ -19,10 +19,10 @@ import {
 } from "./chartOptions";
 import { CartesianChart, CartesianChartLayout } from "./chart/cartesianChart";
 import { PolarChart } from "./chart/polarChart";
-import { LineSeries } from "./chart/series/lineSeries";
-import { ScatterSeries } from "./chart/series/scatterSeries";
-import { BarSeries } from "./chart/series/barSeries";
-import { AreaSeries } from "./chart/series/areaSeries";
+import { LineSeries } from "./chart/series/cartesian/lineSeries";
+import { ScatterSeries } from "./chart/series/cartesian/scatterSeries";
+import { BarSeries } from "./chart/series/cartesian/barSeries";
+import { AreaSeries } from "./chart/series/cartesian/areaSeries";
 import { PieSeries } from "./chart/series/pieSeries";
 import { Chart } from "./chart/chart";
 import { Series } from "./chart/series/series";
@@ -542,7 +542,7 @@ export class ChartBuilder {
         return series;
     }
 
-    private static getMarkerFromType(type: MarkerType): new () => Marker {
+    private static getMarkerFromType(type?: MarkerType): new () => Marker {
         const markerType = (type === 'circle' && Circle)
             || (type === 'cross' && Cross)
             || (type === 'diamond' && Diamond)

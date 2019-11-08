@@ -7,6 +7,8 @@ import { Padding } from "../util/padding";
 import { Group } from "../scene/group";
 import { CategoryAxis } from "./axis/categoryAxis";
 import { GroupedCategoryAxis } from "./axis/groupedCategoryAxis";
+import { reactive } from "../util/observable";
+import { CartesianSeries } from "./series/cartesian/cartesianSeries";
 
 /** Defines the orientation used when rendering data series */
 export enum CartesianChartLayout {
@@ -14,23 +16,15 @@ export enum CartesianChartLayout {
     Horizontal
 }
 
-export interface CartesianChartOptions<TX extends ILinearAxis = Axis<Scale<any, number>>, TY extends ILinearAxis = Axis<Scale<any, number>>> extends ChartOptions {
-    xAxis: TX;
-    yAxis: TY;
-}
-
-export class CartesianChart<TX extends ILinearAxis = Axis<Scale<any, number>>, TY extends ILinearAxis = Axis<Scale<any, number>>> extends Chart {
+export class CartesianChart extends Chart {
     protected axisAutoPadding = new Padding();
 
-    constructor(options: CartesianChartOptions<TX, TY>) {
-        super(options);
+    @reactive(['layoutChange']) flipXY = false;
 
-        const { xAxis, yAxis } = options;
+    constructor() {
+        super();
 
-        this._xAxis = xAxis;
-        this._yAxis = yAxis;
-
-        this.scene.root!.append([xAxis.group, yAxis.group, this._seriesRoot]);
+        // this.scene.root!.append([xAxis.group, yAxis.group, this._seriesRoot]);
         this.scene.root!.append(this.legend.group);
     }
 
@@ -39,26 +33,8 @@ export class CartesianChart<TX extends ILinearAxis = Axis<Scale<any, number>>, T
         return this._seriesRoot;
     }
 
-    private readonly _xAxis: TX;
-    get xAxis(): TX {
-        return this._xAxis;
-    }
-
-    private readonly _yAxis: TY;
-    get yAxis(): TY {
-        return this._yAxis;
-    }
-
-    set series(values: Series<CartesianChart<TX, TY>>[]) {
-        this.removeAllSeries();
-        values.forEach(series => this.addSeries(series));
-    }
-    get series(): Series<CartesianChart<TX, TY>>[] {
-        return this._series as Series<CartesianChart<TX, TY>>[];
-    }
-
     performLayout(): void {
-        if (this.dataPending || !(this.xAxis && this.yAxis)) {
+        if (this.dataPending) {
             return;
         }
 
@@ -98,7 +74,7 @@ export class CartesianChart<TX extends ILinearAxis = Axis<Scale<any, number>>, T
             }
         }
 
-        const { captionAutoPadding, padding, axisAutoPadding, xAxis, yAxis } = this;
+        const { captionAutoPadding, padding, axisAutoPadding } = this;
 
         shrinkRect.x += padding.left + axisAutoPadding.left;
         shrinkRect.y += padding.top + axisAutoPadding.top + captionAutoPadding;

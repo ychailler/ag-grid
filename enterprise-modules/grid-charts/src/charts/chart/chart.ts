@@ -9,7 +9,8 @@ import { Legend, LegendDatum } from "./legend";
 import { BBox } from "../scene/bbox";
 import { find } from "../util/array";
 import { Caption } from "../caption";
-import { Observable, reactive } from "../util/observable";
+import { Observable, reactive, PropertyChangeEvent, PropertyChangeEventListener } from "../util/observable";
+import { ChartAxis } from "./chartAxis";
 
 export interface ChartOptions {
     document?: Document;
@@ -32,12 +33,12 @@ export abstract class Chart extends Observable {
     tooltipOffset = [20, 20];
 
     @reactive([], 'scene.parent') parent?: HTMLElement;
-    @reactive(['layout']) title?: Caption;
-    @reactive(['layout']) subtitle?: Caption;
-    @reactive(['layout']) padding = new Padding(20);
-    @reactive(['layout'], 'scene.size') size: [number, number];
-    @reactive(['layout'], 'scene.height') height: number; // in CSS pixels
-    @reactive(['layout'], 'scene.width') width: number;   // in CSS pixels
+    @reactive(['layoutChange']) title?: Caption;
+    @reactive(['layoutChange']) subtitle?: Caption;
+    @reactive(['layoutChange']) padding = new Padding(20);
+    @reactive(['layoutChange'], 'scene.size') size: [number, number];
+    @reactive(['layoutChange'], 'scene.height') height: number; // in CSS pixels
+    @reactive(['layoutChange'], 'scene.width') width: number;   // in CSS pixels
 
     protected constructor(options: ChartOptions = {}) {
         super();
@@ -62,20 +63,22 @@ export abstract class Chart extends Observable {
 
         this.setupListeners(scene.canvas.element);
 
-        const captionListener = this.addPropertyListener('title', event => {
+        const captionListener = (event => {
             const { source: chart, value: caption, oldValue: oldCaption } = event;
 
             if (oldCaption) {
-                oldCaption.removeEventListener('style');
+                oldCaption.removeEventListener('change', chart.onLayoutChange);
                 chart.scene.root!.removeChild(oldCaption.node);
             }
             if (caption) {
-                caption.addEventListener('style', chart.onLayoutChange);
+                caption.addEventListener('change', chart.onLayoutChange);
                 chart.scene.root!.appendChild(caption.node);
             }
-        });
+        }) as PropertyChangeEventListener<Chart, Caption | undefined>;
+
+        this.addPropertyListener('title', captionListener);
         this.addPropertyListener('subtitle', captionListener);
-        this.addEventListener('layout', () => this.layoutPending = true);
+        this.addEventListener('layoutChange', () => this.layoutPending = true);
     }
 
     destroy() {
@@ -104,15 +107,32 @@ export abstract class Chart extends Observable {
 
     abstract get seriesRoot(): Node;
 
-    protected _series: Series<Chart>[] = [];
-    set series(values: Series<Chart>[]) {
-        this._series = values;
+    protected _axes: ChartAxis[] = [];
+    set axes(values: ChartAxis[]) {
+        this._axes = values;
     }
-    get series(): Series<Chart>[] {
+    get axes(): ChartAxis[] {
+        return this._axes;
+    }
+
+    protected _series: Series[] = [];
+    set series(values: Series[]) {
+        this.removeAllSeries();
+        values.forEach(series => this.addSeries(series));
+    }
+    get series(): Series[] {
         return this._series;
     }
 
-    addSeries(series: Series<Chart>, before?: Series<Chart>): boolean {
+    private readonly scheduleLayout = () => {
+        this.layoutPending = true;
+    }
+
+    private readonly scheduleData = () => {
+        this.dataPending = true;
+    }
+
+    addSeries(series: Series, before?: Series): boolean {
         const { series: allSeries, seriesRoot } = this;
         const canAdd = allSeries.indexOf(series) < 0;
 
@@ -126,7 +146,7 @@ export abstract class Chart extends Observable {
                 allSeries.push(series);
                 seriesRoot.append(series.group);
             }
-            series.chart = this;
+            this.initSeries(series);
             this.dataPending = true;
 
             return true;
@@ -135,7 +155,19 @@ export abstract class Chart extends Observable {
         return false;
     }
 
-    addSeriesAfter(series: Series<Chart>, after?: Series<Chart>): boolean {
+    private initSeries(series: Series) {
+        series.addEventListener('layoutChange', this.scheduleLayout);
+        series.addEventListener('dataChange', this.scheduleData);
+        series.addEventListener('legendChange', this.updateLegend);
+    }
+
+    private freeSeries(series: Series) {
+        series.removeEventListener('layoutChange', this.scheduleLayout);
+        series.removeEventListener('dataChange', this.scheduleData);
+        series.removeEventListener('legendChange', this.updateLegend);
+    }
+
+    addSeriesAfter(series: Series, after?: Series): boolean {
         const { series: allSeries, seriesRoot } = this;
         const canAdd = allSeries.indexOf(series) < 0;
 
@@ -156,23 +188,23 @@ export abstract class Chart extends Observable {
                 } else {
                     seriesRoot.append(series.group);
                 }
+                this.initSeries(series);
 
                 allSeries.unshift(series);
             }
 
-            series.chart = this;
             this.dataPending = true;
         }
 
         return false;
     }
 
-    removeSeries(series: Series<Chart>): boolean {
+    removeSeries(series: Series): boolean {
         const index = this.series.indexOf(series);
 
         if (index >= 0) {
             this.series.splice(index, 1);
-            series.chart = undefined;
+            this.freeSeries(series);
             this.seriesRoot.removeChild(series.group);
             this.dataPending = true;
             return true;
@@ -183,11 +215,84 @@ export abstract class Chart extends Observable {
 
     removeAllSeries(): void {
         this.series.forEach(series => {
-            series.chart = undefined;
+            this.freeSeries(series);
             this.seriesRoot.removeChild(series.group);
         });
         this._series = []; // using `_series` instead of `series` to prevent infinite recursion
         this.dataPending = true;
+    }
+
+    onSeriesChange() { // inside Axis
+        this.axes.forEach(axis => {
+            const axisKey = axis.direction + 'Axis';
+            const boundSeries: Series[] = [];
+
+            this.series.forEach(series => {
+                if ((series as any)[axisKey] === axis) {
+                    boundSeries.push(series);
+                }
+            });
+
+            axis.boundSeries = boundSeries;
+        });
+
+        this.dataPending = true;
+    }
+
+    onAxesChange(force: boolean) { // inside Series
+        const directionToAxesMap: { [key in string]: ChartAxis[] } = {};
+        const directionToKeysMap: { [key in string]: string[] } = {};
+        const { axes } = this;
+
+        this.series.forEach(series => {
+            const directions = series.directions;
+            directions.forEach(direction => {
+                directionToKeysMap[direction] = series.getDirectionKeys(direction);
+            });
+
+            axes.forEach(axis => {
+                const direction = axis.direction;
+                if (!directionToAxesMap[direction]) {
+                    directionToAxesMap[direction] = [axis];
+                } else {
+                    directionToAxesMap[direction].push(axis);
+                }
+            });
+
+            directions.forEach(direction => {
+                if ((force || (series as any)[direction + 'Axis']) && directionToAxesMap[direction]) {
+                    const axis = this.findMatchingAxis(
+                        directionToAxesMap[direction],
+                        directionToKeysMap[direction]
+                    );
+                    if (axis) {
+                        (series as any)[direction + 'Axis'] = axis;
+                    }
+                }
+            });
+        });
+    }
+
+    /**
+     * Given the list of axes in a certain direction and a list of series keys in that
+     * direction returns the first matching axis for the series in that direction,
+     * or `undefined` if a match wasn't found.
+     */
+    private findMatchingAxis(directionAxes: ChartAxis[], directionKeys: string[]): ChartAxis | undefined {
+        for (let i = 0; i < directionAxes.length; i++) {
+            const axis = directionAxes[i];
+            const axisKeys = axis.keys;
+
+            if (!axisKeys.length) {
+                return axis;
+            } else if (directionKeys) {
+                for (let j = 0; j < directionKeys.length; j++) {
+                    if (axisKeys.indexOf(directionKeys[j]) >= 0 ) {
+                        return axis;
+                    }
+                }
+            }
+        }
     }
 
     private _data: any[] = [];
@@ -265,7 +370,7 @@ export abstract class Chart extends Observable {
         this.layoutPending = true;
     }
 
-    updateLegend(): void {
+    readonly updateLegend = () => {
         const legendData: LegendDatum[] = [];
 
         this.series.forEach(series => {
@@ -410,7 +515,7 @@ export abstract class Chart extends Observable {
     }
 
     private pickSeriesNode(x: number, y: number): {
-        series: Series<Chart>,
+        series: Series,
         node: Node
     } | undefined {
         const allSeries = this.series;
@@ -429,7 +534,7 @@ export abstract class Chart extends Observable {
     }
 
     private lastPick?: {
-        series: Series<Chart>,
+        series: Series,
         node: Shape
     };
 
@@ -473,7 +578,7 @@ export abstract class Chart extends Observable {
         }
     }
 
-    private onSeriesNodePick(event: MouseEvent, series: Series<Chart>, node: Shape) {
+    private onSeriesNodePick(event: MouseEvent, series: Series, node: Shape) {
         if (this.lastPick) {
             this.lastPick.series.dehighlightNode();
         }

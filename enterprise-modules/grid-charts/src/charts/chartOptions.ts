@@ -1,7 +1,7 @@
-import { BarTooltipRendererParams } from "./chart/series/barSeries";
-import { LineTooltipRendererParams } from "./chart/series/lineSeries";
-import { AreaTooltipRendererParams } from "./chart/series/areaSeries";
-import { ScatterTooltipRendererParams } from "./chart/series/scatterSeries";
+import { BarTooltipRendererParams } from "./chart/series/cartesian/barSeries";
+import { LineTooltipRendererParams } from "./chart/series/cartesian/lineSeries";
+import { AreaTooltipRendererParams } from "./chart/series/cartesian/areaSeries";
+import { ScatterTooltipRendererParams } from "./chart/series/cartesian/scatterSeries";
 import { PieTooltipRendererParams } from "./chart/series/pieSeries";
 
 export {

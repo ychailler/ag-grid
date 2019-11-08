@@ -1,19 +1,20 @@
-import { Group } from "../../scene/group";
-import { Selection } from "../../scene/selection";
-import { CartesianChart } from "../cartesianChart";
-import { DropShadow } from "../../scene/dropShadow";
-import { Series, SeriesNodeDatum, CartesianTooltipRendererParams as AreaTooltipRendererParams } from "./series";
-import ContinuousScale from "../../scale/continuousScale";
-import { PointerEvents } from "../../scene/node";
-import { sumPositiveValues } from "../../util/array";
-import { toFixed } from "../../util/number";
-import { LegendDatum } from "../legend";
-import { Shape } from "../../scene/shape/shape";
-import { Path } from "../../scene/shape/path";
-import palette from "../palettes";
-import { numericExtent } from "../../util/array";
-import { Marker } from "../marker/marker";
-import { SeriesMarker } from "./seriesMarker";
+import { Group } from "../../../scene/group";
+import { Selection } from "../../../scene/selection";
+import { CartesianChart } from "../../cartesianChart";
+import { DropShadow } from "../../../scene/dropShadow";
+import { Series, SeriesNodeDatum, CartesianTooltipRendererParams as AreaTooltipRendererParams } from "../series";
+import ContinuousScale from "../../../scale/continuousScale";
+import { PointerEvents } from "../../../scene/node";
+import { sumPositiveValues } from "../../../util/array";
+import { toFixed } from "../../../util/number";
+import { LegendDatum } from "../../legend";
+import { Shape } from "../../../scene/shape/shape";
+import { Path } from "../../../scene/shape/path";
+import palette from "../../palettes";
+import { numericExtent } from "../../../util/array";
+import { Marker } from "../../marker/marker";
+import { SeriesMarker } from "../seriesMarker";
+import { CartesianSeries } from "./cartesianSeries";
 
 interface AreaSelectionDatum {
     yKey: string;
@@ -33,7 +34,7 @@ interface MarkerSelectionDatum extends SeriesNodeDatum {
 
 export { AreaTooltipRendererParams };
 
-export class AreaSeries extends Series<CartesianChart> {
+export class AreaSeries extends CartesianSeries {
     static className = 'AreaSeries';
 
     tooltipRenderer?: (params: AreaTooltipRendererParams) => string;
@@ -58,7 +59,7 @@ export class AreaSeries extends Series<CartesianChart> {
         super();
 
         this.marker.addPropertyListener('type', this.onMarkerTypeChange.bind(this));
-        this.marker.addEventListener('style', this.update.bind(this));
+        this.marker.addEventListener('change', this.update.bind(this));
     }
 
     onMarkerTypeChange() {
@@ -110,6 +111,11 @@ export class AreaSeries extends Series<CartesianChart> {
     private xData: string[] = [];
     private yData: number[][] = [];
     private domainY: any[] = [];
+
+    directionKeys = {
+        x: ['xKey'],
+        y: ['yKeys']
+    };
 
     protected _xKey: string = '';
     set xKey(value: string) {
@@ -215,12 +221,12 @@ export class AreaSeries extends Series<CartesianChart> {
     }
 
     processData(): boolean {
-        const { chart, xKey, yKeys, yKeyEnabled } = this;
+        const { xKey, yKeys, yKeyEnabled } = this;
         const data = xKey && yKeys.length ? this.data : [];
 
-        if (!(chart && chart.xAxis && chart.yAxis)) {
-            return false;
-        }
+        // if (!(chart && chart.xAxis && chart.yAxis)) {
+        //     return false;
+        // }
 
         // If the data is an array of rows like so:
         //
@@ -253,7 +259,7 @@ export class AreaSeries extends Series<CartesianChart> {
 
         const ySums = this.yData.map(values => sumPositiveValues(values)); // used for normalization
         const { xData, yData, normalizedTo } = this;
-        const isContinuousX = chart.xAxis.scale instanceof ContinuousScale;
+        const isContinuousX = this.xAxis.scale instanceof ContinuousScale;
         const domainX = isContinuousX ? (numericExtent(xData) || [0, 1]) : xData;
 
         if (isContinuousX) {
@@ -287,9 +293,11 @@ export class AreaSeries extends Series<CartesianChart> {
 
         this.domainY = [yMin, yMax];
 
-        if (chart) {
-            chart.updateAxes();
-        }
+        // if (chart) {
+        //     chart.updateAxes();
+        // }
+
+        this.fireEvent({type: 'dataProcessed'});
 
         return true;
     }
@@ -303,12 +311,11 @@ export class AreaSeries extends Series<CartesianChart> {
     }
 
     update(): void {
-        const chart = this.chart;
         const visible = this.group.visible = this.visible;
 
-        if (!chart || !visible || chart.dataPending || chart.layoutPending || !(chart.xAxis && chart.yAxis)) {
-            return;
-        }
+        // if (!chart || !visible || chart.dataPending || chart.layoutPending || !(chart.xAxis && chart.yAxis)) {
+        //     return;
+        // }
 
         const { areaSelectionData, markerSelectionData } = this.generateSelectionData();
 
@@ -326,10 +333,9 @@ export class AreaSeries extends Series<CartesianChart> {
             xData,
             yData,
             marker,
-            chart,
         } = this;
 
-        const { xAxis: { scale: xScale }, yAxis: { scale: yScale } } = chart!;
+        const { xAxis: { scale: xScale }, yAxis: { scale: yScale } } = this;
         const xOffset = (xScale.bandwidth || 0) / 2;
         const yOffset = (yScale.bandwidth || 0) / 2;
         const areaSelectionData: AreaSelectionDatum[] = [];

@@ -5,14 +5,8 @@ import { numericExtent } from "../util/array";
 import { GroupedCategoryAxis } from "./axis/groupedCategoryAxis";
 
 export type GroupedCategoryChartAxis = GroupedCategoryAxis | Axis<Scale<any, number>>;
-export interface GroupedCategoryChartOptions extends CartesianChartOptions<GroupedCategoryChartAxis, GroupedCategoryChartAxis> {
-}
 
-export class GroupedCategoryChart extends CartesianChart<GroupedCategoryChartAxis, GroupedCategoryChartAxis> {
-    constructor(options: GroupedCategoryChartOptions) {
-        super(options);
-    }
-
+export class GroupedCategoryChart extends CartesianChart {
     updateAxes() {
         const isHorizontal = this.layout === CartesianChartLayout.Horizontal;
         const xAxis = isHorizontal ? this.yAxis : this.xAxis;

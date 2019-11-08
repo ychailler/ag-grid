@@ -1,17 +1,18 @@
-import { CartesianChart } from "../cartesianChart";
-import { Path } from "../../scene/shape/path";
-import ContinuousScale from "../../scale/continuousScale";
-import { Selection } from "../../scene/selection";
-import { Group } from "../../scene/group";
-import palette from "../palettes";
-import { Series, SeriesNodeDatum, CartesianTooltipRendererParams as LineTooltipRendererParams } from "./series";
-import { numericExtent } from "../../util/array";
-import { toFixed } from "../../util/number";
-import { PointerEvents } from "../../scene/node";
-import { LegendDatum } from "../legend";
-import { Shape } from "../../scene/shape/shape";
-import { Marker } from "../marker/marker";
-import { SeriesMarker } from "./seriesMarker";
+import { CartesianChart } from "../../cartesianChart";
+import { Path } from "../../../scene/shape/path";
+import ContinuousScale from "../../../scale/continuousScale";
+import { Selection } from "../../../scene/selection";
+import { Group } from "../../../scene/group";
+import palette from "../../palettes";
+import { Series, SeriesNodeDatum, CartesianTooltipRendererParams as LineTooltipRendererParams } from "../series";
+import { numericExtent } from "../../../util/array";
+import { toFixed } from "../../../util/number";
+import { PointerEvents } from "../../../scene/node";
+import { LegendDatum } from "../../legend";
+import { Shape } from "../../../scene/shape/shape";
+import { Marker } from "../../marker/marker";
+import { SeriesMarker } from "../seriesMarker";
+import { CartesianSeries } from "./cartesianSeries";
 
 interface GroupSelectionDatum extends SeriesNodeDatum {
     x: number;
@@ -24,7 +25,7 @@ interface GroupSelectionDatum extends SeriesNodeDatum {
 
 export { LineTooltipRendererParams };
 
-export class LineSeries extends Series<CartesianChart> {
+export class LineSeries extends CartesianSeries {
 
     static className = 'LineSeries';
 
@@ -49,7 +50,7 @@ export class LineSeries extends Series<CartesianChart> {
         this.group.append(lineNode);
 
         this.marker.addPropertyListener('type', this.onMarkerTypeChange.bind(this));
-        this.marker.addEventListener('style', this.update.bind(this));
+        this.marker.addEventListener('change', this.update.bind(this));
     }
 
     onMarkerTypeChange() {
@@ -116,17 +117,17 @@ export class LineSeries extends Series<CartesianChart> {
     }
 
     processData(): boolean {
-        const { chart, xKey, yKey } = this;
+        const { xKey, yKey } = this;
         const data = xKey && yKey ? this.data : [];
 
-        if (!(chart && chart.xAxis && chart.yAxis)) {
-            return false;
-        }
+        // if (!(chart && chart.xAxis && chart.yAxis)) {
+        //     return false;
+        // }
 
         this.xData = data.map(datum => datum[xKey]);
         this.yData = data.map(datum => datum[yKey]);
 
-        const isContinuousX = chart.xAxis.scale instanceof ContinuousScale;
+        const isContinuousX = this.xAxis.scale instanceof ContinuousScale;
         const domainX = isContinuousX ? (numericExtent(this.xData) || [0, 1]) : this.xData;
         const domainY = numericExtent(this.yData) || [0, 1];
 
@@ -209,14 +210,13 @@ export class LineSeries extends Series<CartesianChart> {
     }
 
     update(): void {
-        const chart = this.chart;
         const visible = this.group.visible = this.visible;
 
-        if (!chart || !visible || chart.dataPending || chart.layoutPending || !(chart.xAxis && chart.yAxis)) {
-            return;
-        }
+        // if (!chart || !visible || chart.dataPending || chart.layoutPending || !(chart.xAxis && chart.yAxis)) {
+        //     return;
+        // }
 
-        const { xAxis: { scale: xScale }, yAxis: { scale: yScale } } = chart;
+        const { xAxis: { scale: xScale }, yAxis: { scale: yScale } } = this;
         const xOffset = (xScale.bandwidth || 0) / 2;
         const yOffset = (yScale.bandwidth || 0) / 2;
 

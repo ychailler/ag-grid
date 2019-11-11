@@ -1,14 +1,14 @@
 import { Series } from "../series";
-import { ChartAxis } from "../../chartAxis";
+import { ChartAxis, ChartAxisDirection } from "../../chartAxis";
 
 export abstract class CartesianSeries extends Series {
     xAxis: ChartAxis;
     yAxis: ChartAxis;
 
-    directions: string[] = ['x', 'y'];
+    directions: ChartAxisDirection[] = [ChartAxisDirection.X, ChartAxisDirection.Y];
 
-    directionKeys = {
-        x: ['xKey'],
-        y: ['yKey']
+    directionKeys: { [key in ChartAxisDirection]?: string[] } = {
+        [ChartAxisDirection.X]: ['xKey'],
+        [ChartAxisDirection.Y]: ['yKey']
     };
 }

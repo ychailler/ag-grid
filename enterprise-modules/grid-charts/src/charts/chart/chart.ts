@@ -9,8 +9,8 @@ import { Legend, LegendDatum } from "./legend";
 import { BBox } from "../scene/bbox";
 import { find } from "../util/array";
 import { Caption } from "../caption";
-import { Observable, reactive, PropertyChangeEvent, PropertyChangeEventListener } from "../util/observable";
-import { ChartAxis } from "./chartAxis";
+import { Observable, reactive, PropertyChangeEventListener } from "../util/observable";
+import { ChartAxis, ChartAxisDirection } from "./chartAxis";
 
 export interface ChartOptions {
     document?: Document;
@@ -110,6 +110,7 @@ export abstract class Chart extends Observable {
     protected _axes: ChartAxis[] = [];
     set axes(values: ChartAxis[]) {
         this._axes = values;
+        this.onAxesChange();
     }
     get axes(): ChartAxis[] {
         return this._axes;
@@ -119,6 +120,7 @@ export abstract class Chart extends Observable {
     set series(values: Series[]) {
         this.removeAllSeries();
         values.forEach(series => this.addSeries(series));
+        this.onSeriesChange();
     }
     get series(): Series[] {
         return this._series;
@@ -222,13 +224,16 @@ export abstract class Chart extends Observable {
         this.dataPending = true;
     }
 
-    onSeriesChange() { // inside Axis
+    /**
+     * Finds all the series that use any given axis.
+     */
+    protected onSeriesChange() { // inside Axis
         this.axes.forEach(axis => {
-            const axisKey = axis.direction + 'Axis';
+            const axisName = axis.direction + 'Axis';
             const boundSeries: Series[] = [];
 
             this.series.forEach(series => {
-                if ((series as any)[axisKey] === axis) {
+                if ((series as any)[axisName] === axis) {
                     boundSeries.push(series);
                 }
             });
@@ -239,9 +244,9 @@ export abstract class Chart extends Observable {
         this.dataPending = true;
     }
 
-    onAxesChange(force: boolean) { // inside Series
-        const directionToAxesMap: { [key in string]: ChartAxis[] } = {};
-        const directionToKeysMap: { [key in string]: string[] } = {};
+    protected onAxesChange(force: boolean = false) { // inside Series
+        const directionToKeysMap: { [key in ChartAxisDirection]?: string[] } = {};
+        const directionToAxesMap: { [key in ChartAxisDirection]?: ChartAxis[] } = {};
         const { axes } = this;
 
         this.series.forEach(series => {
@@ -252,33 +257,26 @@ export abstract class Chart extends Observable {
 
             axes.forEach(axis => {
                 const direction = axis.direction;
-                if (!directionToAxesMap[direction]) {
-                    directionToAxesMap[direction] = [axis];
-                } else {
-                    directionToAxesMap[direction].push(axis);
-                }
+                const directionAxes = directionToAxesMap[direction] || (directionToAxesMap[direction] = []);
+                directionAxes.push(axis);
             });
 
             directions.forEach(direction => {
-                if ((force || (series as any)[direction + 'Axis']) && directionToAxesMap[direction]) {
-                    const axis = this.findMatchingAxis(
-                        directionToAxesMap[direction],
-                        directionToKeysMap[direction]
-                    );
-                    if (axis) {
-                        (series as any)[direction + 'Axis'] = axis;
+                const axisName = direction + 'Axis';
+                if (!(series as any)[axisName] || force) {
+                    const directionAxes = directionToAxesMap[direction];
+                    if (directionAxes) {
+                        const axis = this.findMatchingAxis(directionAxes, directionToKeysMap[direction]);
+                        if (axis) {
+                            (series as any)[axisName] = axis;
+                        }
                     }
                 }
             });
         });
     }
 
-    /**
-     * Given the list of axes in a certain direction and a list of series keys in that
-     * direction returns the first matching axis for the series in that direction,
-     * or `undefined` if a match wasn't found.
-     */
-    private findMatchingAxis(directionAxes: ChartAxis[], directionKeys: string[]): ChartAxis | undefined {
+    private findMatchingAxis(directionAxes: ChartAxis[], directionKeys?: string[]): ChartAxis | undefined {
         for (let i = 0; i < directionAxes.length; i++) {
             const axis = directionAxes[i];
             const axisKeys = axis.keys;

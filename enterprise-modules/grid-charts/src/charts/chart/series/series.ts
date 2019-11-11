@@ -1,9 +1,8 @@
 import { Group } from "../../scene/group";
-import { Chart } from "../chart";
 import { LegendDatum } from "../legend";
 import { Shape } from "../../scene/shape/shape";
 import { Observable, reactive } from "../../util/observable";
-import { CartesianChart } from "../cartesianChart";
+import { ChartAxisDirection } from "../chartAxis";
 
 /**
  * `D` - raw series datum, an element in the {@link Series.data} array.
@@ -57,11 +56,14 @@ export abstract class Series extends Observable {
     @reactive(['dataChange']) visible = true;
     @reactive(['layoutChange']) showInLegend = true;
 
-    directions: string[] = [];
+    directions: ChartAxisDirection[];
 
-    directionKeys: { [key in string]: string[] };
+    directionKeys: { [key in ChartAxisDirection]?: string[] };
 
-    getDirectionKeys(direction: string): string[] {
+    /**
+     * Returns the actual keys used (to fetch the values from `data` items) for the given direction.
+     */
+    getDirectionKeys(direction: ChartAxisDirection): string[] {
         const { directionKeys } = this;
         const keys = directionKeys && directionKeys[direction];
         const values: string[] = [];

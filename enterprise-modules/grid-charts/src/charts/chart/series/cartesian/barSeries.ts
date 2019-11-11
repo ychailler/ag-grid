@@ -1,6 +1,5 @@
 import { Group } from "../../../scene/group";
 import { Selection } from "../../../scene/selection";
-import { CartesianChart } from "../../cartesianChart";
 import { Rect } from "../../../scene/shape/rect";
 import { Text, FontStyle, FontWeight } from "../../../scene/shape/text";
 import { BandScale } from "../../../scale/bandScale";
@@ -10,13 +9,12 @@ import { HighlightStyle, Series, SeriesNodeDatum, CartesianTooltipRendererParams
 import { Label } from "../../label";
 import { PointerEvents } from "../../../scene/node";
 import { sumPositiveValues } from "../../../util/array";
-import { Color } from "../../../util/color";
 import { toFixed } from "../../../util/number";
 import { LegendDatum } from "../../legend";
 import { Shape } from "../../../scene/shape/shape";
-import { NumberAxis } from "../../axis/numberAxis";
 import { reactive } from "../../../util/observable";
 import { CartesianSeries } from "./cartesianSeries";
+import { ChartAxisDirection } from "../../chartAxis";
 
 interface SelectionDatum extends SeriesNodeDatum {
     yKey: string;
@@ -104,8 +102,8 @@ export class BarSeries extends CartesianSeries {
     private groupScale = new BandScale<string>();
 
     directionKeys = {
-        x: ['xKey'],
-        y: ['yKeys']
+        [ChartAxisDirection.X]: ['xKey'],
+        [ChartAxisDirection.Y]: ['yKeys']
     };
 
     @reactive(['layoutChange']) flipXY = false;

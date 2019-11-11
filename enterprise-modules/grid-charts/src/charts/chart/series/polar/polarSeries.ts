@@ -1,15 +1,15 @@
 import { Series } from "../series";
-import { ChartAxis } from "../../chartAxis";
+import { ChartAxis, ChartAxisDirection } from "../../chartAxis";
 
 export abstract class PolarSeries extends Series {
     angleAxis: ChartAxis;
     radiusAxis: ChartAxis;
 
-    directions: string[] = ['angle', 'radius'];
+    directions: ChartAxisDirection[] = [ChartAxisDirection.Angle, ChartAxisDirection.Radius];
 
     directionKeys = {
-        angle: ['angleKey'],
-        radius: ['radiusKey']
+        [ChartAxisDirection.Angle]: ['angleKey'],
+        [ChartAxisDirection.Radius]: ['radiusKey']
     };
 
     /**

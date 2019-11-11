@@ -1,14 +1,11 @@
-import { Chart, ChartOptions } from "./chart";
-import { Axis, ILinearAxis } from "../axis";
-import Scale from "../scale/scale";
-import { Series } from "./series/series";
+import { Chart } from "./chart";
 import { numericExtent } from "../util/array";
 import { Padding } from "../util/padding";
 import { Group } from "../scene/group";
 import { CategoryAxis } from "./axis/categoryAxis";
 import { GroupedCategoryAxis } from "./axis/groupedCategoryAxis";
 import { reactive } from "../util/observable";
-import { CartesianSeries } from "./series/cartesian/cartesianSeries";
+import { ChartAxisPosition } from "./chartAxis";
 
 /** Defines the orientation used when rendering data series */
 export enum CartesianChartLayout {
@@ -38,7 +35,7 @@ export class CartesianChart extends Chart {
             return;
         }
 
-        const { width, height, legend } = this;
+        const { width, height, axes, legend } = this;
 
         const shrinkRect = {
             x: 0,
@@ -81,21 +78,32 @@ export class CartesianChart extends Chart {
         shrinkRect.width -= padding.left + padding.right + axisAutoPadding.left + axisAutoPadding.right;
         shrinkRect.height -= padding.top + padding.bottom + axisAutoPadding.top + axisAutoPadding.bottom + captionAutoPadding;
 
-        xAxis.scale.range = [0, shrinkRect.width];
-        xAxis.rotation = -90;
-        (xAxis as any).translation.x = Math.floor(shrinkRect.x); // TODO: remove the CartesianChart generic (possibly get rid of xAxis, yAxis too)
-        (xAxis as any).translation.y = Math.floor(shrinkRect.y + shrinkRect.height + 1);
-        xAxis.label.parallel = true;
-        xAxis.gridLength = shrinkRect.height;
+        axes.forEach(axis => {
+            const { position } = axis;
 
-        if (yAxis instanceof CategoryAxis || yAxis instanceof GroupedCategoryAxis) {
-            yAxis.scale.range = [0, shrinkRect.height];
-        } else {
-            yAxis.scale.range = [shrinkRect.height, 0];
-        }
-        (yAxis as any).translation.x = Math.floor(shrinkRect.x); // TODO: remove the CartesianChart generic (possibly get rid of xAxis, yAxis too)
-        (yAxis as any).translation.y = Math.floor(shrinkRect.y);
-        yAxis.gridLength = shrinkRect.width;
+            switch (position) {
+                case ChartAxisPosition.Top:
+                    break;
+                case ChartAxisPosition.Right:
+                    break;
+                case ChartAxisPosition.Bottom:
+                    axis.scale.range = [0, shrinkRect.width];
+                    axis.translation.x = Math.floor(shrinkRect.x);
+                    axis.translation.y = Math.floor(shrinkRect.y + shrinkRect.height + 1);
+                    axis.gridLength = shrinkRect.height;
+                    break;
+                case ChartAxisPosition.Left:
+                    if (axis instanceof CategoryAxis || axis instanceof GroupedCategoryAxis) {
+                        axis.scale.range = [0, shrinkRect.height];
+                    } else {
+                        axis.scale.range = [shrinkRect.height, 0];
+                    }
+                    axis.translation.x = Math.floor(shrinkRect.x);
+                    axis.translation.y = Math.floor(shrinkRect.y);
+                    axis.gridLength = shrinkRect.width;
+                    break;
+            }
+        });
 
         this.updateAxes();
 

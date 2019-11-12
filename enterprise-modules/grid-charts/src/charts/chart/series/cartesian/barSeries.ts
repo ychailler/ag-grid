@@ -14,7 +14,7 @@ import { LegendDatum } from "../../legend";
 import { Shape } from "../../../scene/shape/shape";
 import { reactive } from "../../../util/observable";
 import { CartesianSeries } from "./cartesianSeries";
-import { ChartAxisDirection } from "../../chartAxis";
+import { ChartAxisDirection, flipChartAxisDirection } from "../../chartAxis";
 
 interface SelectionDatum extends SeriesNodeDatum {
     yKey: string;
@@ -71,7 +71,7 @@ export class BarSeries extends CartesianSeries {
 
     private xData: string[] = [];
     private yData: number[][] = [];
-    private domainY: number[] = [];
+    private yDomain: number[] = [];
 
     readonly label = new BarSeriesLabel();
 
@@ -107,6 +107,28 @@ export class BarSeries extends CartesianSeries {
     };
 
     @reactive(['layoutChange']) flipXY = false;
+
+    getKeys(direction: ChartAxisDirection): string[] {
+        const { directionKeys } = this;
+        const keys = directionKeys && directionKeys[this.flipXY ? flipChartAxisDirection(direction) : direction];
+        const values: string[] = [];
+
+        if (keys) {
+            keys.forEach(key => {
+                const value = (this as any)[key];
+
+                if (value) {
+                    if (Array.isArray(value)) {
+                        values.push(...value);
+                    } else {
+                        values.push(value);
+                    }
+                }
+            });
+        }
+
+        return values;
+    }
 
     protected _xKey: string = '';
     set xKey(value: string) {
@@ -315,7 +337,7 @@ export class BarSeries extends CartesianSeries {
             // console.warn('Zero or infinite y-range.');
         }
 
-        this.domainY = [yMin, yMax];
+        this.yDomain = [yMin, yMax];
 
         // if (chart) {
         //     chart.updateAxes();
@@ -325,16 +347,24 @@ export class BarSeries extends CartesianSeries {
         return true;
     }
 
-    getDomainX(): string[] {
-        return this.xData;
-    }
-
-    getDomainY(): number[] {
-        return this.domainY;
+    getDomain(direction: ChartAxisDirection): any[] {
+        if (this.flipXY) {
+            direction = flipChartAxisDirection(direction);
+        }
+        if (direction === ChartAxisDirection.X) {
+            return this.xData;
+        } else {
+            return this.yDomain;
+        }
     }
 
     update(): void {
-        const visible = this.group.visible = this.visible;
+        const { visible, xAxis, yAxis } = this;
+        this.group.visible = visible;
+
+        if (!visible || !xAxis || !yAxis) {
+            return;
+        }
 
         // if (!chart || !visible || chart.dataPending || chart.layoutPending || !(chart.xAxis && chart.yAxis)) {
         //     return;
@@ -348,7 +378,6 @@ export class BarSeries extends CartesianSeries {
 
     private generateSelectionData() {
         const { xAxis, yAxis, flipXY } = this;
-        // const flipXY = xAxis instanceof NumberAxis;
         const xScale = (flipXY ? yAxis : xAxis).scale;
         const yScale = (flipXY ? xAxis : yAxis).scale;
 

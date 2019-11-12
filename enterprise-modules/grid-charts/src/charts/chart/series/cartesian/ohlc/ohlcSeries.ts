@@ -45,8 +45,8 @@ export class OHLCSeries extends CartesianSeries {
 
     static className = 'OHLCSeries';
 
-    private domainX: number[] = [];
-    private domainY: number[] = [];
+    xDomain: number[] = [];
+    yDomain: number[] = [];
 
     // Have data separated by key, so that we can process the minimum amount of data
     // when a key changes.
@@ -186,7 +186,7 @@ export class OHLCSeries extends CartesianSeries {
         const data = dateKey && openKey && highKey && lowKey && closeKey ? this.data : [];
 
         if (dirtyDateData) {
-            this.domainX = this.calculateDomain(this.dateData = data.map(d => d[dateKey]));
+            this.xDomain = this.calculateDomain(this.dateData = data.map(d => d[dateKey]));
             this.dirtyDateData = false;
         }
 
@@ -209,7 +209,7 @@ export class OHLCSeries extends CartesianSeries {
 
         if (dirtyOpenData || dirtyHighData || dirtyLowData || dirtyCloseData) {
             const yDomains = new Array<any>().concat(this.openData, this.highData, this.lowData, this.closeData);
-            this.domainY = this.calculateDomain(yDomains);
+            this.yDomain = this.calculateDomain(yDomains);
         }
 
         return true;
@@ -322,14 +322,6 @@ export class OHLCSeries extends CartesianSeries {
             });
 
         this.groupSelection = groupSelection;
-    }
-
-    getDomainX(): any[] {
-        return this.domainX;
-    }
-
-    getDomainY(): any[] {
-        return this.domainY;
     }
 
     private dateFormatter = locale.format('%d %b, %Y');

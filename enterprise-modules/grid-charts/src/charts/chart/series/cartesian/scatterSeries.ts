@@ -36,8 +36,8 @@ export class ScatterSeries extends CartesianSeries {
 
     static className = 'ScatterSeries';
 
-    private domainX: number[] = [];
-    private domainY: number[] = [];
+    xDomain: number[] = [];
+    yDomain: number[] = [];
     private xData: any[] = [];
     private yData: any[] = [];
     private sizeData: number[] = [];
@@ -110,8 +110,8 @@ export class ScatterSeries extends CartesianSeries {
         }
 
         this.sizeScale.domain = numericExtent(this.sizeData) || [1, 1];
-        this.domainX = this.calculateDomain(this.xData);
-        this.domainY = this.calculateDomain(this.yData);
+        this.xDomain = this.calculateDomain(this.xData);
+        this.yDomain = this.calculateDomain(this.yData);
 
         return true;
     }
@@ -202,14 +202,6 @@ export class ScatterSeries extends CartesianSeries {
             });
 
         this.groupSelection = groupSelection;
-    }
-
-    getDomainX(): any[] {
-        return this.domainX;
-    }
-
-    getDomainY(): any[] {
-        return this.domainY;
     }
 
     getTooltipHtml(nodeDatum: GroupSelectionDatum): string {

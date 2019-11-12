@@ -1,4 +1,4 @@
-import { CartesianChartLayout, CartesianChart, CartesianChartOptions } from "./cartesianChart";
+import { CartesianChartLayout, CartesianChart } from "./cartesianChart";
 import { Axis } from "../axis";
 import Scale from "../scale/scale";
 import { numericExtent } from "../util/array";
@@ -22,7 +22,7 @@ export class GroupedCategoryChart extends CartesianChart {
         let isNumericXAxis: boolean | undefined = undefined;
 
         this.series.filter(s => s.visible).forEach(series => {
-            const xDomain = series.getDomainX();
+            const xDomain = series.xDomain;
 
             if (isNumericXAxis === undefined) {
                 // always add first X domain
@@ -33,7 +33,7 @@ export class GroupedCategoryChart extends CartesianChart {
                 xDomains.push(xDomain);
             }
 
-            yDomains.push(series.getDomainY());
+            yDomains.push(series.yDomain);
         });
 
         const xDomain = new Array<any>().concat(...xDomains);

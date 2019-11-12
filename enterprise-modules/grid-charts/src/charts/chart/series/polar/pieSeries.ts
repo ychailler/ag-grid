@@ -412,11 +412,11 @@ export class PieSeries extends PolarSeries {
         this.scheduleLayout();
     }
 
-    getDomainX(): [number, number] {
+    get xDomain(): [number, number] {
         return this.angleScale.domain as [number, number];
     }
 
-    getDomainY(): [number, number] {
+    get yDomain(): [number, number] {
         return this.radiusScale.domain as [number, number];
     }
 

@@ -29,8 +29,8 @@ export class LineSeries extends CartesianSeries {
 
     static className = 'LineSeries';
 
-    private domainX: any[] = [];
-    private domainY: any[] = [];
+    xDomain: any[] = [];
+    yDomain: any[] = [];
     private xData: any[] = [];
     private yData: any[] = [];
 
@@ -128,27 +128,27 @@ export class LineSeries extends CartesianSeries {
         this.yData = data.map(datum => datum[yKey]);
 
         const isContinuousX = this.xAxis.scale instanceof ContinuousScale;
-        const domainX = isContinuousX ? (numericExtent(this.xData) || [0, 1]) : this.xData;
-        const domainY = numericExtent(this.yData) || [0, 1];
+        const xDomain = isContinuousX ? (numericExtent(this.xData) || [0, 1]) : this.xData;
+        const yDomain = numericExtent(this.yData) || [0, 1];
 
         if (isContinuousX) {
-            const [min, max] = domainX as number[];
+            const [min, max] = xDomain as number[];
 
             if (min === max) {
-                domainX[0] = min - 1;
-                domainX[1] = max + 1;
+                xDomain[0] = min - 1;
+                xDomain[1] = max + 1;
             }
         }
 
-        const [min, max] = domainY;
+        const [min, max] = yDomain;
 
         if (min === max) {
-            domainY[0] = min - 1;
-            domainY[1] = max + 1;
+            yDomain[0] = min - 1;
+            yDomain[1] = max + 1;
         }
 
-        this.domainX = domainX;
-        this.domainY = domainY;
+        this.xDomain = xDomain;
+        this.yDomain = yDomain;
 
         return true;
     }
@@ -307,14 +307,6 @@ export class LineSeries extends CartesianSeries {
             });
 
         this.groupSelection = groupSelection;
-    }
-
-    getDomainX(): any[] {
-        return this.domainX;
-    }
-
-    getDomainY(): any[] {
-        return this.domainY;
     }
 
     getTooltipHtml(nodeDatum: GroupSelectionDatum): string {

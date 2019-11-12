@@ -109,8 +109,11 @@ export abstract class Chart extends Observable {
 
     protected _axes: ChartAxis[] = [];
     set axes(values: ChartAxis[]) {
+        const root = this.scene.root!;
+        this._axes.forEach(axis => root.removeChild(axis.group));
         this._axes = values;
-        this.onAxesChange();
+        this._axes.forEach(axis => root.insertBefore(axis.group, this.seriesRoot));
+        this.axesChanged = true;
     }
     get axes(): ChartAxis[] {
         return this._axes;
@@ -120,7 +123,6 @@ export abstract class Chart extends Observable {
     set series(values: Series[]) {
         this.removeAllSeries();
         values.forEach(series => this.addSeries(series));
-        this.onSeriesChange();
     }
     get series(): Series[] {
         return this._series;
@@ -149,6 +151,7 @@ export abstract class Chart extends Observable {
                 seriesRoot.append(series.group);
             }
             this.initSeries(series);
+            this.seriesChanged = true;
             this.dataPending = true;
 
             return true;
@@ -195,6 +198,7 @@ export abstract class Chart extends Observable {
                 allSeries.unshift(series);
             }
 
+            this.seriesChanged = true;
             this.dataPending = true;
         }
 
@@ -208,6 +212,7 @@ export abstract class Chart extends Observable {
             this.series.splice(index, 1);
             this.freeSeries(series);
             this.seriesRoot.removeChild(series.group);
+            this.seriesChanged = true;
             this.dataPending = true;
             return true;
         }
@@ -221,6 +226,7 @@ export abstract class Chart extends Observable {
             this.seriesRoot.removeChild(series.group);
         });
         this._series = []; // using `_series` instead of `series` to prevent infinite recursion
+        this.seriesChanged = true;
         this.dataPending = true;
     }
 
@@ -244,6 +250,7 @@ export abstract class Chart extends Observable {
         this.dataPending = true;
     }
 
+    // Has to run before onSeriesChange
     protected onAxesChange(force: boolean = false) { // inside Series
         const directionToKeysMap: { [key in ChartAxisDirection]?: string[] } = {};
         const directionToAxesMap: { [key in ChartAxisDirection]?: ChartAxis[] } = {};
@@ -252,7 +259,7 @@ export abstract class Chart extends Observable {
         this.series.forEach(series => {
             const directions = series.directions;
             directions.forEach(direction => {
-                directionToKeysMap[direction] = series.getDirectionKeys(direction);
+                directionToKeysMap[direction] = series.getKeys(direction);
             });
 
             axes.forEach(axis => {
@@ -302,6 +309,9 @@ export abstract class Chart extends Observable {
         return this._data;
     }
 
+    private axesChanged = false;
+    private seriesChanged = false;
+
     private layoutCallbackId: number = 0;
     set layoutPending(value: boolean) {
         if (value) {
@@ -325,6 +335,17 @@ export abstract class Chart extends Observable {
         this.layoutCallbackId = 0;
         this.background.width = this.width;
         this.background.height = this.height;
+
+        if (this.axesChanged) {
+            this.axesChanged = false;
+            this.onAxesChange();
+        }
+
+        if (this.seriesChanged) {
+            this.seriesChanged = false;
+            this.onSeriesChange();
+        }
+
         this.performLayout();
         if (this.onLayoutDone) {
             this.onLayoutDone();

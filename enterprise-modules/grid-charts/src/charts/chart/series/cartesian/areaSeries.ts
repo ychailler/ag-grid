@@ -110,7 +110,7 @@ export class AreaSeries extends CartesianSeries {
 
     private xData: string[] = [];
     private yData: number[][] = [];
-    private domainY: any[] = [];
+    yDomain: any[] = [];
 
     directionKeys = {
         x: ['xKey'],
@@ -260,14 +260,14 @@ export class AreaSeries extends CartesianSeries {
         const ySums = this.yData.map(values => sumPositiveValues(values)); // used for normalization
         const { xData, yData, normalizedTo } = this;
         const isContinuousX = this.xAxis.scale instanceof ContinuousScale;
-        const domainX = isContinuousX ? (numericExtent(xData) || [0, 1]) : xData;
+        const xDomain = isContinuousX ? (numericExtent(xData) || [0, 1]) : xData;
 
         if (isContinuousX) {
-            const [min, max] = domainX as number[];
+            const [min, max] = xDomain as number[];
 
             if (min === max) {
-                domainX[0] = min - 1;
-                domainX[1] = max + 1;
+                xDomain[0] = min - 1;
+                xDomain[1] = max + 1;
             }
         }
 
@@ -291,7 +291,7 @@ export class AreaSeries extends CartesianSeries {
             // console.warn('Zero or infinite y-range.');
         }
 
-        this.domainY = [yMin, yMax];
+        this.yDomain = [yMin, yMax];
 
         // if (chart) {
         //     chart.updateAxes();
@@ -302,12 +302,8 @@ export class AreaSeries extends CartesianSeries {
         return true;
     }
 
-    getDomainX(): string[] {
+    get xDomain(): string[] {
         return this.xData;
-    }
-
-    getDomainY(): number[] {
-        return this.domainY;
     }
 
     update(): void {

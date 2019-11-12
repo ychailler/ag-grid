@@ -21,8 +21,9 @@ export class CartesianChart extends Chart {
     constructor() {
         super();
 
-        // this.scene.root!.append([xAxis.group, yAxis.group, this._seriesRoot]);
-        this.scene.root!.append(this.legend.group);
+        const root = this.scene.root!;
+        root.append(this._seriesRoot);
+        root.append(this.legend.group);
     }
 
     private _seriesRoot = new Group();
@@ -129,50 +130,77 @@ export class CartesianChart extends Chart {
     }
 
     updateAxes() {
-        const isHorizontal = this.layout === CartesianChartLayout.Horizontal;
-        const xAxis = isHorizontal ? this.yAxis : this.xAxis;
-        const yAxis = isHorizontal ? this.xAxis : this.yAxis;
+        const { axes } = this;
+        // const isHorizontal = this.layout === CartesianChartLayout.Horizontal;
+        // const xAxis = isHorizontal ? this.yAxis : this.xAxis;
+        // const yAxis = isHorizontal ? this.xAxis : this.yAxis;
 
-        if (!(xAxis && yAxis)) {
-            return;
-        }
+        // const xDomains: any[][] = [];
+        // const yDomains: any[][] = [];
 
-        const xDomains: any[][] = [];
-        const yDomains: any[][] = [];
+        // this.series.filter(s => s.visible).forEach(series => {
+        //     xDomains.push(series.xDomain);
+        //     yDomains.push(series.yDomain);
+        // });
 
-        this.series.filter(s => s.visible).forEach(series => {
-            xDomains.push(series.getDomainX());
-            yDomains.push(series.getDomainY());
+        // const xDomain = new Array<any>().concat(...xDomains);
+        // const yDomain = new Array<any>().concat(...yDomains);
+
+        // xAxis.domain = numericExtent(xDomain) || xDomain;
+        // yAxis.domain = numericExtent(yDomain) || yDomain;
+
+        axes.forEach(axis => {
+            const { direction, position, boundSeries } = axis;
+            const domains: any[][] = [];
+            boundSeries.filter(s => s.visible).forEach(series => {
+                domains.push(series.getDomain(direction));
+            });
+            const domain = new Array<any>().concat(...domains);
+            axis.domain = numericExtent(domain) || domain;
+
+            switch (position) {
+                case ChartAxisPosition.Left:
+                    {
+                        const axisThickness = Math.floor(axis.getBBox().width);
+                        if (this.axisAutoPadding.left !== axisThickness) {
+                            this.axisAutoPadding.left = axisThickness;
+                            this.layoutPending = true;
+                        }
+                    }
+                    break;
+                case ChartAxisPosition.Bottom:
+                    {
+                        const axisThickness = Math.floor(axis.getBBox().width);
+                        if (this.axisAutoPadding.bottom !== axisThickness) {
+                            this.axisAutoPadding.bottom = axisThickness;
+                            this.layoutPending = true;
+                        }
+                    }
+                    break;
+            }
+
+            axis.update();
         });
-
-        const xDomain = new Array<any>().concat(...xDomains);
-        const yDomain = new Array<any>().concat(...yDomains);
-
-        xAxis.domain = numericExtent(xDomain) || xDomain;
-        yAxis.domain = numericExtent(yDomain) || yDomain;
-
-        xAxis.update();
-        yAxis.update();
 
         // The `xAxis` and `yAxis` have `.this` prefix on purpose here,
         // because the local `xAxis` and `yAxis` variables may be swapped.
-        const xAxisBBox = this.xAxis.getBBox();
-        const yAxisBBox = this.yAxis.getBBox();
+        // const xAxisBBox = this.xAxis.getBBox();
+        // const yAxisBBox = this.yAxis.getBBox();
 
-        {
-            const axisThickness = Math.floor(xAxisBBox.width);
-            if (this.axisAutoPadding.bottom !== axisThickness) {
-                this.axisAutoPadding.bottom = axisThickness;
-                this.layoutPending = true;
-            }
-        }
-        {
-            const axisThickness = Math.floor(yAxisBBox.width);
+        // {
+        //     const axisThickness = Math.floor(xAxisBBox.width);
+        //     if (this.axisAutoPadding.bottom !== axisThickness) {
+        //         this.axisAutoPadding.bottom = axisThickness;
+        //         this.layoutPending = true;
+        //     }
+        // }
+        // {
+        //     const axisThickness = Math.floor(yAxisBBox.width);
 
-            if (this.axisAutoPadding.left !== axisThickness) {
-                this.axisAutoPadding.left = axisThickness;
-                this.layoutPending = true;
-            }
-        }
+        //     if (this.axisAutoPadding.left !== axisThickness) {
+        //         this.axisAutoPadding.left = axisThickness;
+        //         this.layoutPending = true;
+        //     }
+        // }
     }
 }

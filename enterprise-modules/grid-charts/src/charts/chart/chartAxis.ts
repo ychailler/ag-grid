@@ -1,28 +1,34 @@
 import Scale from "../scale/scale";
 import { Axis } from "../axis";
 import { Series } from "./series/series";
-import { tsThisType } from "@babel/types";
 
 export enum ChartAxisDirection {
-    X,
-    Y,
-    Angle,
-    Radius
+    X = 'x', // means 'angle' in polar charts
+    Y = 'y'  // means 'radius' in polar charts
+}
+
+export function flipChartAxisDirection(direction: ChartAxisDirection): ChartAxisDirection {
+    if (direction === ChartAxisDirection.X) {
+        return ChartAxisDirection.Y;
+    } else {
+        return ChartAxisDirection.X;
+    }
 }
 
 export enum ChartAxisPosition {
-    Top,
-    Right,
-    Bottom,
-    Left,
-    Angle,
-    Radius
+    Top = 'top',
+    Right = 'right',
+    Bottom = 'bottom',
+    Left = 'left',
+    Angle = 'angle',
+    Radius = 'radius'
 }
 
 export class ChartAxis extends Axis<Scale<any, number>> {
     keys: string[] = [];
     direction: ChartAxisDirection;
     boundSeries: Series[] = [];
+    thickness: number = 0;
 
     protected _position: ChartAxisPosition;
     set position(value: ChartAxisPosition) {
@@ -30,21 +36,25 @@ export class ChartAxis extends Axis<Scale<any, number>> {
             this._position = value;
             switch (value) {
                 case ChartAxisPosition.Top:
+                    this.direction = ChartAxisDirection.X;
                     this.rotation = -90;
                     this.label.mirrored = true;
                     this.label.parallel = true;
                     break;
                 case ChartAxisPosition.Right:
+                    this.direction = ChartAxisDirection.Y;
                     this.rotation = 0;
                     this.label.mirrored = true;
                     this.label.parallel = false;
                     break;
                 case ChartAxisPosition.Bottom:
+                    this.direction = ChartAxisDirection.X;
                     this.rotation = -90;
                     this.label.mirrored = false;
                     this.label.parallel = true;
                     break;
                 case ChartAxisPosition.Left:
+                    this.direction = ChartAxisDirection.Y;
                     this.rotation = 0;
                     this.label.mirrored = false;
                     this.label.parallel = false;

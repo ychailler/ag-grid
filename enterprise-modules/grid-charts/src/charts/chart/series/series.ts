@@ -63,7 +63,7 @@ export abstract class Series extends Observable {
     /**
      * Returns the actual keys used (to fetch the values from `data` items) for the given direction.
      */
-    getDirectionKeys(direction: ChartAxisDirection): string[] {
+    getKeys(direction: ChartAxisDirection): string[] {
         const { directionKeys } = this;
         const keys = directionKeys && directionKeys[direction];
         const values: string[] = [];
@@ -73,7 +73,7 @@ export abstract class Series extends Observable {
                 const value = (this as any)[key];
 
                 if (value) {
-                    if (value.length) {
+                    if (Array.isArray(value)) {
                         values.push(...value);
                     } else {
                         values.push(value);
@@ -94,8 +94,7 @@ export abstract class Series extends Observable {
         return className + '-' + (constructor.id = (constructor.id || 0) + 1);
     }
 
-    abstract getDomainX(): any[];
-    abstract getDomainY(): any[];
+    abstract getDomain(direction: ChartAxisDirection): any[];
 
     abstract processData(): boolean;
     abstract update(): void;

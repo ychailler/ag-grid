@@ -2,7 +2,7 @@ import { Group } from "../../scene/group";
 import { LegendDatum } from "../legend";
 import { Shape } from "../../scene/shape/shape";
 import { Observable, reactive } from "../../util/observable";
-import { ChartAxisDirection } from "../chartAxis";
+import { ChartAxis, ChartAxisDirection } from "../chartAxis";
 
 /**
  * `D` - raw series datum, an element in the {@link Series.data} array.
@@ -49,16 +49,18 @@ export abstract class Series extends Observable {
      */
     readonly group: Group = new Group();
 
+    xAxis: ChartAxis;
+    yAxis: ChartAxis;
+
+    directions: ChartAxisDirection[] = [ChartAxisDirection.X, ChartAxisDirection.Y];
+    directionKeys: { [key in ChartAxisDirection]?: string[] };
+
     tooltipEnabled: boolean = false;
 
     @reactive(['dataChange']) data: any[] = [];
     // @reactive(['dataChange']) chart?: C;
     @reactive(['dataChange']) visible = true;
     @reactive(['layoutChange']) showInLegend = true;
-
-    directions: ChartAxisDirection[];
-
-    directionKeys: { [key in ChartAxisDirection]?: string[] };
 
     /**
      * Returns the actual keys used (to fetch the values from `data` items) for the given direction.

@@ -14,6 +14,7 @@ import { reactive } from "../../../util/observable";
 import { Axis } from "../../../axis";
 import Scale from "../../../scale/scale";
 import { CartesianSeries } from "./cartesianSeries";
+import { ChartAxisDirection } from "../../chartAxis";
 
 interface GroupSelectionDatum extends SeriesNodeDatum {
     x: number;
@@ -36,8 +37,8 @@ export class ScatterSeries extends CartesianSeries {
 
     static className = 'ScatterSeries';
 
-    xDomain: number[] = [];
-    yDomain: number[] = [];
+    private xDomain: number[] = [];
+    private yDomain: number[] = [];
     private xData: any[] = [];
     private yData: any[] = [];
     private sizeData: number[] = [];
@@ -73,16 +74,16 @@ export class ScatterSeries extends CartesianSeries {
         super();
 
         const { marker } = this;
-        marker.addPropertyListener('type', this.onMarkerTypeChange.bind(this));
-        marker.addEventListener('change', this.update.bind(this));
+        marker.addPropertyListener('type', () => this.onMarkerTypeChange());
+        marker.addEventListener('change', () => this.update());
         marker.addEventListener('legendChange', event => this.fireEvent(event));
 
         this.addPropertyListener('xKey', () => this.xData = []);
         this.addPropertyListener('yKey', () => this.yData = []);
         this.addPropertyListener('sizeKey', () => this.sizeData = []);
 
-        this.addEventListener('layoutChange', () => this.scheduleLayout.bind(this));
-        this.addEventListener('dataChange', () => this.scheduleData.bind(this));
+        this.addEventListener('layoutChange', () => this.scheduleLayout());
+        this.addEventListener('dataChange', () => this.scheduleData());
     }
 
     onMarkerTypeChange() {
@@ -126,6 +127,14 @@ export class ScatterSeries extends CartesianSeries {
         }
 
         return domain;
+    }
+
+    getDomain(direction: ChartAxisDirection): any[] {
+        if (direction === ChartAxisDirection.X) {
+            return this.xDomain;
+        } else {
+            return this.yDomain;
+        }
     }
 
     highlightNode(node: Shape) {

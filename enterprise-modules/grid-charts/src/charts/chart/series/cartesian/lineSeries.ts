@@ -4,7 +4,7 @@ import ContinuousScale from "../../../scale/continuousScale";
 import { Selection } from "../../../scene/selection";
 import { Group } from "../../../scene/group";
 import palette from "../../palettes";
-import { Series, SeriesNodeDatum, CartesianTooltipRendererParams as LineTooltipRendererParams } from "../series";
+import { SeriesNodeDatum, CartesianTooltipRendererParams as LineTooltipRendererParams } from "../series";
 import { numericExtent } from "../../../util/array";
 import { toFixed } from "../../../util/number";
 import { PointerEvents } from "../../../scene/node";
@@ -13,6 +13,7 @@ import { Shape } from "../../../scene/shape/shape";
 import { Marker } from "../../marker/marker";
 import { SeriesMarker } from "../seriesMarker";
 import { CartesianSeries } from "./cartesianSeries";
+import { ChartAxisDirection } from "../../chartAxis";
 
 interface GroupSelectionDatum extends SeriesNodeDatum {
     x: number;
@@ -29,8 +30,8 @@ export class LineSeries extends CartesianSeries {
 
     static className = 'LineSeries';
 
-    xDomain: any[] = [];
-    yDomain: any[] = [];
+    private xDomain: any[] = [];
+    private yDomain: any[] = [];
     private xData: any[] = [];
     private yData: any[] = [];
 
@@ -49,8 +50,8 @@ export class LineSeries extends CartesianSeries {
         lineNode.pointerEvents = PointerEvents.None;
         this.group.append(lineNode);
 
-        this.marker.addPropertyListener('type', this.onMarkerTypeChange.bind(this));
-        this.marker.addEventListener('change', this.update.bind(this));
+        this.marker.addPropertyListener('type', () => this.onMarkerTypeChange());
+        this.marker.addEventListener('change', () => this.update());
     }
 
     onMarkerTypeChange() {
@@ -151,6 +152,14 @@ export class LineSeries extends CartesianSeries {
         this.yDomain = yDomain;
 
         return true;
+    }
+
+    getDomain(direction: ChartAxisDirection): any[] {
+        if (direction === ChartAxisDirection.X) {
+            return this.xDomain;
+        } else {
+            return this.yDomain;
+        }
     }
 
     private _fill: string = palette.fills[0];

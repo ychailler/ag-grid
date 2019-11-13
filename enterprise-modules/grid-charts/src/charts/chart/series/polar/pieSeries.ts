@@ -138,8 +138,8 @@ export class PieSeries extends PolarSeries {
     constructor() {
         super();
 
-        this.label.addEventListener('change', () => this.scheduleLayout.bind(this));
-        this.label.addEventListener('dataChange', () => this.scheduleData.bind(this));
+        this.label.addEventListener('change', () => this.scheduleLayout());
+        this.label.addEventListener('dataChange', () => this.scheduleData());
 
         this.addPropertyListener('data', event => {
             event.source.dataEnabled = event.value.map(() => true);

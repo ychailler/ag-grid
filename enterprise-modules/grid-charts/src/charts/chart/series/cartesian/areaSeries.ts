@@ -1,8 +1,7 @@
 import { Group } from "../../../scene/group";
 import { Selection } from "../../../scene/selection";
-import { CartesianChart } from "../../cartesianChart";
 import { DropShadow } from "../../../scene/dropShadow";
-import { Series, SeriesNodeDatum, CartesianTooltipRendererParams as AreaTooltipRendererParams } from "../series";
+import { SeriesNodeDatum, CartesianTooltipRendererParams as AreaTooltipRendererParams } from "../series";
 import ContinuousScale from "../../../scale/continuousScale";
 import { PointerEvents } from "../../../scene/node";
 import { sumPositiveValues } from "../../../util/array";
@@ -15,6 +14,7 @@ import { numericExtent } from "../../../util/array";
 import { Marker } from "../../marker/marker";
 import { SeriesMarker } from "../seriesMarker";
 import { CartesianSeries } from "./cartesianSeries";
+import { ChartAxisDirection } from "../../chartAxis";
 
 interface AreaSelectionDatum {
     yKey: string;
@@ -58,8 +58,8 @@ export class AreaSeries extends CartesianSeries {
     constructor() {
         super();
 
-        this.marker.addPropertyListener('type', this.onMarkerTypeChange.bind(this));
-        this.marker.addEventListener('change', this.update.bind(this));
+        this.marker.addPropertyListener('type', () => this.onMarkerTypeChange());
+        this.marker.addEventListener('change', () => this.update());
     }
 
     onMarkerTypeChange() {
@@ -110,7 +110,7 @@ export class AreaSeries extends CartesianSeries {
 
     private xData: string[] = [];
     private yData: number[][] = [];
-    yDomain: any[] = [];
+    private yDomain: any[] = [];
 
     directionKeys = {
         x: ['xKey'],
@@ -302,8 +302,12 @@ export class AreaSeries extends CartesianSeries {
         return true;
     }
 
-    get xDomain(): string[] {
-        return this.xData;
+    getDomain(direction: ChartAxisDirection): any[] {
+        if (direction === ChartAxisDirection.X) {
+            return this.xData;
+        } else {
+            return this.yDomain;
+        }
     }
 
     update(): void {

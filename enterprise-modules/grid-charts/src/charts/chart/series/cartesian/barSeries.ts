@@ -93,7 +93,7 @@ export class BarSeries extends CartesianSeries {
         super();
 
         this.label.enabled = false;
-        this.label.addEventListener('change', () => this.update.bind(this));
+        this.label.addEventListener('change', () => this.update());
     }
 
     /**

@@ -162,11 +162,11 @@ export class Axis<S extends Scale<D, number>, D = any> implements ILinearAxis<S>
     //     return rect;
     // })();
 
-    readonly scale: S;
-    readonly group = new Group();
     private groupSelection: Selection<Group, Group, D, D>;
     private lineNode = new Line();
-    // onLayoutChange?: () => void;
+
+    readonly scale: S;
+    readonly group = new Group();
 
     readonly line: {
         /**

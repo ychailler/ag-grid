@@ -88,7 +88,7 @@ export class Legend extends Observable {
             }
         });
 
-        this.addEventListener('change', this.update.bind(this));
+        this.addEventListener('change', () => this.update());
     }
 
     private _size: [number, number] = [0, 0];

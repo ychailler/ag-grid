@@ -12,11 +12,6 @@ import { Caption } from "../caption";
 import { Observable, reactive, PropertyChangeEventListener } from "../util/observable";
 import { ChartAxis, ChartAxisDirection } from "./chartAxis";
 
-export interface ChartOptions {
-    document?: Document;
-    parent?: HTMLElement;
-}
-
 export type LegendPosition = 'top' | 'right' | 'bottom' | 'left';
 
 export abstract class Chart extends Observable {
@@ -40,19 +35,17 @@ export abstract class Chart extends Observable {
     @reactive(['layoutChange'], 'scene.height') height: number; // in CSS pixels
     @reactive(['layoutChange'], 'scene.width') width: number;   // in CSS pixels
 
-    protected constructor(options: ChartOptions = {}) {
+    protected constructor(document = window.document) {
         super();
 
         const root = new Group();
         const background = this.background;
-        const document = options.document || window.document;
 
         background.fill = 'white';
         root.appendChild(background);
 
-        const scene = new Scene({ document });
+        const scene = new Scene(document);
         this.scene = scene;
-        scene.parent = options.parent;
         scene.root = root;
         this.legend.onLayoutChange = this.onLayoutChange;
         this.legend.addPropertyListener('position', this.onLegendPositionChange);

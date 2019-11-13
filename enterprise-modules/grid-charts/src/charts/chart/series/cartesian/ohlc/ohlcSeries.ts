@@ -11,6 +11,7 @@ import { Candlestick } from "./marker/candlestick";
 import { locale } from "../../../../util/time/format/defaultLocale";
 import { CartesianSeries } from "../cartesianSeries";
 import { reactive, Observable } from "../../../../util/observable";
+import { ChartAxisDirection } from "../../../chartAxis";
 
 interface GroupSelectionDatum extends SeriesNodeDatum {
     date: number;
@@ -45,8 +46,8 @@ export class OHLCSeries extends CartesianSeries {
 
     static className = 'OHLCSeries';
 
-    xDomain: number[] = [];
-    yDomain: number[] = [];
+    private xDomain: number[] = [];
+    private yDomain: number[] = [];
 
     // Have data separated by key, so that we can process the minimum amount of data
     // when a key changes.
@@ -70,8 +71,8 @@ export class OHLCSeries extends CartesianSeries {
         super();
 
         this.marker.type = Candlestick;
-        this.marker.addEventListener('styleChange', this.update.bind(this));
-        this.marker.addPropertyListener('type', this.onMarkerTypeChange.bind(this));
+        this.marker.addEventListener('styleChange', () => this.update());
+        this.marker.addPropertyListener('type', () => this.onMarkerTypeChange());
 
         this.addEventListener('dataChange', () => {
             this.dirtyDateData = true;
@@ -225,6 +226,14 @@ export class OHLCSeries extends CartesianSeries {
         }
 
         return domain;
+    }
+
+    getDomain(direction: ChartAxisDirection): any[] {
+        if (direction === ChartAxisDirection.X) {
+            return this.xDomain;
+        } else {
+            return this.yDomain;
+        }
     }
 
     highlightStyle: {

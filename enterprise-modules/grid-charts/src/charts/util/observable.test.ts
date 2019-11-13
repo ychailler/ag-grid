@@ -9,6 +9,8 @@ class Component extends Observable {
     @reactive(['name', 'misc']) john = 'smith';
     @reactive(['name', 'misc']) bob = 'marley';
     @reactive(['change'], 'subComponent.foo') foo: string;
+    @reactive() arr: [] | undefined | null = [];
+    @reactive() obj: {} | undefined | null = {};
 }
 
 class BaseClass extends Observable {
@@ -127,6 +129,32 @@ test('addEventListener', () => {
     c.bob = 'test';
 
     expect(sum).toBe(2);
+
+    let arrChange = false;
+    c.addPropertyListener('arr', () => arrChange = true);
+    c.arr = [];
+    expect(arrChange).toBe(true);
+    arrChange = false;
+    c.arr = null;
+    expect(arrChange).toBe(true);
+    arrChange = false;
+    c.arr = null;
+    expect(arrChange).toBe(false);
+    c.arr = undefined;
+    expect(arrChange).toBe(true);
+
+    let objChange = false;
+    c.addPropertyListener('obj', () => objChange = true);
+    c.obj = {};
+    expect(objChange).toBe(true);
+    objChange = false;
+    c.obj = null;
+    expect(objChange).toBe(true);
+    objChange = false;
+    c.obj = null;
+    expect(objChange).toBe(false);
+    c.obj = undefined;
+    expect(objChange).toBe(true);
 });
 
 test('removeEventListener', () => {

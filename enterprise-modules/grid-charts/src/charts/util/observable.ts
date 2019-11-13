@@ -141,7 +141,7 @@ export function reactive(events?: string[], property?: string) {
                         oldValue = this[privateKey];
                     }
 
-                    if (oldValue !== value) {
+                    if (oldValue !== value || (typeof value === 'object' && value !== null)) {
                         if (backingProperty) {
                             let i = 0, last = backingProperty.length - 1, obj = this;
                             while (i < last) {

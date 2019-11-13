@@ -18,8 +18,8 @@ export class CartesianChart extends Chart {
 
     @reactive(['layoutChange']) flipXY = false;
 
-    constructor() {
-        super();
+    constructor(document = window.document) {
+        super(document);
 
         const root = this.scene.root!;
         root.append(this._seriesRoot);

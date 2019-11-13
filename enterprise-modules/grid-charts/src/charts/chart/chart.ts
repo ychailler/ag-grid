@@ -340,9 +340,7 @@ export abstract class Chart extends Observable {
         }
 
         this.performLayout();
-        if (this.onLayoutDone) {
-            this.onLayoutDone();
-        }
+        this.fireEvent({ type: 'layoutDone' });
     }
 
     private dataCallbackId: number = 0;
@@ -361,8 +359,6 @@ export abstract class Chart extends Observable {
     get dataPending(): boolean {
         return !!this.dataCallbackId;
     }
-
-    onLayoutDone?: () => void;
 
     private readonly _processData = () => {
         this.dataCallbackId = 0;

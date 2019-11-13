@@ -1,14 +1,10 @@
-import { Chart, ChartOptions } from "./chart";
-import { Padding } from "../util/padding";
+import { Chart } from "./chart";
 import { Node } from "../scene/node";
-import { Series } from "./series/series";
 import { PolarSeries } from "./series/polar/polarSeries";
 
 export class PolarChart extends Chart {
-    protected _padding = new Padding(50);
-
-    constructor(options: ChartOptions = {}) {
-        super(options);
+    constructor(document = window.document) {
+        super(document);
 
         this.scene.root!.append(this.legend.group);
     }

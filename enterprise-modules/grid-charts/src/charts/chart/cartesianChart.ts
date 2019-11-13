@@ -84,8 +84,22 @@ export class CartesianChart extends Chart {
 
             switch (position) {
                 case ChartAxisPosition.Top:
+                    axis.scale.range = [0, shrinkRect.width];
+                    axis.translation.x = Math.floor(shrinkRect.x);
+                    axis.translation.y = Math.floor(shrinkRect.y + 1);
+                    axis.label.mirrored = true;
+                    axis.gridLength = shrinkRect.height;
                     break;
                 case ChartAxisPosition.Right:
+                    if (axis instanceof CategoryAxis || axis instanceof GroupedCategoryAxis) {
+                        axis.scale.range = [0, shrinkRect.height];
+                    } else {
+                        axis.scale.range = [shrinkRect.height, 0];
+                    }
+                    axis.translation.x = Math.floor(shrinkRect.x + shrinkRect.width + 1);
+                    axis.translation.y = Math.floor(shrinkRect.y);
+                    axis.label.mirrored = true;
+                    axis.gridLength = shrinkRect.width;
                     break;
                 case ChartAxisPosition.Bottom:
                     axis.scale.range = [0, shrinkRect.width];
@@ -168,6 +182,15 @@ export class CartesianChart extends Chart {
                         }
                     }
                     break;
+                case ChartAxisPosition.Right:
+                    {
+                        const axisThickness = Math.floor(axis.getBBox().width);
+                        if (this.axisAutoPadding.right !== axisThickness) {
+                            this.axisAutoPadding.right = axisThickness;
+                            this.layoutPending = true;
+                        }
+                    }
+                    break;
                 case ChartAxisPosition.Bottom:
                     {
                         const axisThickness = Math.floor(axis.getBBox().width);
@@ -176,6 +199,15 @@ export class CartesianChart extends Chart {
                             this.layoutPending = true;
                         }
                     }
+                    break;
+                case ChartAxisPosition.Top:
+                {
+                    const axisThickness = Math.floor(axis.getBBox().width);
+                    if (this.axisAutoPadding.top !== axisThickness) {
+                        this.axisAutoPadding.top = axisThickness;
+                        this.layoutPending = true;
+                    }
+                }
                     break;
             }
 

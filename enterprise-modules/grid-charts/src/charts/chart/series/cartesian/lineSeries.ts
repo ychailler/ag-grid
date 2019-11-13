@@ -219,13 +219,19 @@ export class LineSeries extends CartesianSeries {
     }
 
     update(): void {
-        const visible = this.group.visible = this.visible;
+        const { xAxis, yAxis } = this;
+        this.group.visible = this.visible;
+
+        if (!xAxis || !yAxis) {
+            return;
+        }
 
         // if (!chart || !visible || chart.dataPending || chart.layoutPending || !(chart.xAxis && chart.yAxis)) {
         //     return;
         // }
 
-        const { xAxis: { scale: xScale }, yAxis: { scale: yScale } } = this;
+        const xScale = xAxis.scale;
+        const yScale = yAxis.scale;
         const xOffset = (xScale.bandwidth || 0) / 2;
         const yOffset = (yScale.bandwidth || 0) / 2;
 

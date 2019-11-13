@@ -23,7 +23,7 @@ import { LineSeries } from "./chart/series/cartesian/lineSeries";
 import { ScatterSeries } from "./chart/series/cartesian/scatterSeries";
 import { BarSeries } from "./chart/series/cartesian/barSeries";
 import { AreaSeries } from "./chart/series/cartesian/areaSeries";
-import { PieSeries } from "./chart/series/pieSeries";
+import { PieSeries } from "./chart/series/polar/pieSeries";
 import { Chart } from "./chart/chart";
 import { Series } from "./chart/series/series";
 import { SeriesMarker } from "./chart/series/seriesMarker";
@@ -44,19 +44,14 @@ import { Plus } from "./chart/marker/plus";
 import { Square } from "./chart/marker/square";
 import { Triangle } from "./chart/marker/triangle";
 import { Marker } from "./chart/marker/marker";
+import { ChartAxis } from "./chart/chartAxis";
 
 export class ChartBuilder {
-    private static createCartesianChart(
-        parent: HTMLElement,
-        xAxis: Axis<Scale<any, number>>,
-        yAxis: Axis<Scale<any, number>>,
-        document?: Document): CartesianChart {
-        return new CartesianChart({
-            parent,
-            xAxis,
-            yAxis,
-            document,
-        });
+    private static createCartesianChart(parent: HTMLElement, xAxis: ChartAxis, yAxis: ChartAxis, document?: Document): CartesianChart {
+        const chart = new CartesianChart(document);
+        chart.parent = parent;
+        chart.axes = [xAxis, yAxis];
+        return chart;
     }
 
     private static createGroupedCategoryChart(
@@ -155,7 +150,9 @@ export class ChartBuilder {
     }
 
     private static createPolarChart<T>(parent: HTMLElement): PolarChart {
-        return new PolarChart({ parent });
+        const chart = new PolarChart();
+        chart.parent = parent;
+        return chart;
     }
 
     static createDoughnutChart(parent: HTMLElement, options: PolarChartOptions<PieSeriesOptions>): PolarChart {
@@ -281,7 +278,7 @@ export class ChartBuilder {
         return chart;
     }
 
-    static initSeries<S extends Series<any>>(series: S, options: SeriesOptions) {
+    static initSeries<S extends Series>(series: S, options: SeriesOptions) {
         this.setValueIfExists(series, 'visible', options.visible);
         this.setValueIfExists(series, 'showInLegend', options.showInLegend);
         this.setValueIfExists(series, 'data', options.data);
